@@ -37,7 +37,35 @@
 ### line close to the best fit would have very large distance on the points where the amount of money involved in a  ###
 ### transaction is large, or where it is very little. For that reason the method of maximum likelihood is preferred  ###
 ###                                                                                                                  ###
-###                                                                                                                  ###
-### When talking about maximizing the likelihood of something we mean the value that maximizes the likelihood of the ###
-### o                                                                                                                ###
+### We use the following steps to do that:
+
+### 1:  Take  random strate line (a candidate 'best fit, just like in regression), that we think describes our points
+### well.
+### 2:  Use the P(x) =  e^(b0 + b1X)/ (1+ e^(b0 + b1X)) (given above) to transform that streat line to the S-shaped 
+### curve that plots the propability from 0 to 1 for each of our x
+### 3: We can now use those calculated p(x) foe each of our x to access how good this candidate line is. For each x 
+### we can get the 'predicted' by the curve y (its P(x)), which in this case is also called the 'liklihood'
+### 4: We then calculate the liklihood for ALL of the success cases (p(x)) and unsucessful cases (1-p(x)) (e.g
+### propability, given by y value, of a fraud transaction acually been fraud, and propability, again as calculated by 
+### our model of a legit transaction been not fraud). Whether a point is a seccuss of not, we know from the data we 
+### have already colected. To get the total, we just need to multiply everything. This basicly, calculates the
+### propability of us predicting everything correctly, so the higher that is the better. 
+### 5: In reality we prefer to calculate the log of that propability instead. 'It just so huppens' that the log of
+### the maximoum of the log of the likelihood is the same as the maximum of the likelihood.
+### The reason why the log is favoured steams from the fact that it is easier to deferenciate a product. When looking
+### for the max of an equation, we differenciate that equation and look for where it is equall to 0. If we take the 
+### log of the equation we turn a difficult deferenciation of products to a addition (log(a*b)= log(a)+log(b) ), which
+### is easy to solve. 
+### 7: FInally, we choose the candidate line (which has our coefficients), that results in the higher log likelihood.
+### (Software like R does this very very easilly using 'smart algorithms')
+
+
+
+
+
+
+
+
+
+
 ########################################################################################################################
