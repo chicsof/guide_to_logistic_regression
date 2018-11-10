@@ -1,0 +1,267 @@
+---
+title: "Guide to Logistic Regression"
+author: "Sofia Kyriazidi"
+date: "9 November 2018"
+output:
+  html_document: default
+---
+Usage
+Similar to linear regression (part of the family of Generalized Linear Models). However it is part of a group of models called classifiers (tries to group elements/events) and this most often involves qualitative rather than quantitative data.  
+Unlike linear regression, which is used mostly chosen for inference(studying the relationship between variables, effects
+of each other, strength and direction), we usually use logistic regression for predicting (or sometimes studying) a
+binary outcome (has only two outcomes, patient has diabetes or not, transaction is fraud or legit).  
+The model does that by measuring the probability associated with each of the two and based on a chosen threshold will
+decide on one (e.g if $p > 0.5$ a transaction is fraud).
+It assigns those probabilities by taking into account the predictors we have provided and their approximated
+coefficients as calculated from the data, that we have trained the model with.
+For example location of the transaction, time or money.  
+
+As with linear regression, quantitative data is handled by assigning a dummy variable boolean (e.g isFraud = 1,
+isNotFraud = 0).
+We are interested in finding how close a point is to $1$ (in other words its probability of success (fraud in this case)
+plotted on the $y$ axis), as measured by the predictors (x, z ... axis).  
+The issue is that we can get any value between $0$ and $1$, as well as values above and bellow that (e.g if the amount of
+money used in a transaction is extremely large we might get something like p = 2.3 according to whatever coefficients
+in $y = a + bx + cx + \ldots + e$ are calculated).
+This is not as useful and sometimes does not make sense, that's why we use a transformation to fit our data exactly
+between $0$ and $1$.
+
+Formula
+There are various transformation for that, in logistic regression we use the logistic function:
+$P(x) = e^{(b0 + b1X)} \div (1 + e^{(b0 + b1X)})$, where $b0$ and $b1$ are our coefficients, this makes an S-shaped curve where
+the edges are $0$ and $1$.
+We want to try and bring this in a more linear form, after manipulation we can see that:
+$P(x) \div (1 - P(x))=e^{(b0 + b1X)}$
+$P(x) \div (1 - P(x))$, is called the the odds. It is the probability of success over the probability of failure. It is
+used for example in horse-racing where if the odds are $\frac{1}{3}$ the horse is likely to win one race but loose $3$.
+To make our equation more linear we can take the log. We notice that this is basically a linear equation using
+the log of the odds on y-axis $log(P(x) \div (1-P(x))) = b0 + b1X$, this makes things a lot easier (see more about why
+its helpful later on)
+
+Best fit using maximum likelihood
+Another issue is how we can find the 'best fit line', that best describes all our data points. In linear
+regression we used the least squares approach. This required measuring the residuals (distance of our points to
+the line) and trying to minimize that value by moving the line. However the distance of the points from a random
+line (close to the real) in linear regression is somehow constant, the error has a constant standard deviation.
+In logistic regression when a predictor reaches extreme points the distance will tend to $\pm \infty$. For
+example if we try and fit a line for the probability of a transaction been fraud based on the money involved; a
+line close to the best fit would have very large distance on the points where the amount of money involved in a
+transaction is large, or where it is very little. For that reason the method of maximum likelihood is preferred
+
+We use the following steps to do that:
+
+1. Take  random straight line (a candidate 'best fit, just like in regression), that we think describes our points well.
+
+2. Use the $P(x) =  e^{(b0 + b1X)} \div (1 + e^{(b0 + b1X)})$ (given above) to transform that street line to the S-shaped
+curve that plots the probability from $0$ to $1$ for each of our $x$
+
+3. We can now use those calculated $p(x)$ foe each of our $x$ to access how good this candidate line is. For each $x$
+we can get the 'predicted' by the curve $y$ (its $P(x)$), which in this case is also called the 'likelihood'
+
+4. We then calculate the likelihood for ALL of the success cases ($P(x)$) and unsuccessful cases ($1 - P(x)$) (e.g
+probability, given by y value, of a fraud transaction actually been fraud, and probability, again as calculated by
+our model of a legit transaction been not fraud). Whether a point is a success of not, we know from the data we
+have already collected. To get the total, we just need to multiply everything. In a way this calculates 
+'how likly we are' to predicting everything correctly, so the higher that is the better.
+
+5. In reality we prefer to calculate the log of that probability instead. 'It just so happens' that the log of
+the maximum of the log of the likelihood is the same as the maximum of the likelihood.
+The reason why the log is favoured steams from the fact that it is easier to differentiate a product. When looking
+for the max of an equation, we differentiate that equation and look for where it is equal to $0$. If we take the
+log of the equation we turn a difficult differentiation of products to a addition ($log(a \times b)= log(a) + log(b)$), which
+is easy to solve.
+
+6. Finally, we choose the candidate line (which has our coefficients), that results in the higher log likelihood.
+(Software like R does this very very easily using 'smart algorithms')
+
+R-squared
+....But if we can't calculate the residuals (distance of the predicted $y$ (from our line) to the true $y$ (from our points)
+how do we calculate the R-squared and p-values. well this is not as simple as in linear regression and there are dozens
+different ways to do it. An easy and common way, supported by R, is the MacFadden's Pseudo R-squared, this is very
+similar to how its calculated in linear regression.
+
+If we remember, R-squared is a value measuring how much of the variation in y is explained by our model, which indicates how well
+it fits the data. To find that value we calculate the total variation not decribed by the line, by deviding a meause of the disctance of our points to the line to the distance of our points to the mean.The we take one minus the outcome. This basicly will show how much better our model is from just predicting using the mean/no predictors involved. So all we need to do is find a different way of calculating how fit the model is to the data and what the predictions whoud be if we used the mean instead. Well we already have the first, the log of the likelihood for our curve (LL(fit)), exacly explains how close our predictions are to the true y. We can get the propability of a case been successfull, whithout accounding for any predictors, simple by the definition of 
+propabilities p(of success) = sucessfull cases/ total cases. Using that as the p(x) for ALL of our values we can can get the log of the likelihood as before (LL(overall)). We can then compare the two and see how much better our model is. Just like in linear regression the resulting R square will be from 0 to 1.
+
+Suturated and Null Models
+We know that the R-squared always takes values from 0 to 1. This helps us make objective conclusions on how well our model performs and compare the performance of different models. We know that it is given by 1 -(some measure of fitness of our model/some meausure of fitness of a 'bad' model), to show how much 'better' our model is. In linear regression our model's fitness is measured by the distance of the points to our line. This will only ever go as far as zero, since the perfect model will have zero distance. In linear regression we take the log of the liklihood using the product of all the propabilities, a propability will only ever go as far as 1 resulting in log(1)=0. What this means is that we had no need to provide an upper bound, all we needed was a lower bound, a meaure of 'bad' performance which was making prediction by just using a mean, since the perfect model whould always result having a zero as the nominator and giving us a R-squared = 1-0=1, a perfect fit.
+
+However this is not always the case, in many other models the calculation of R-squared chould result in any number, and this whould not provide any clear indication of whether our model is doing well or not. This is why we need an upper bound. That upper bound is just a model that fits perfectly all our data points and is called the Saturated model. It requires all the data points as parameters to be able to make a model that perfectly fits them all and maximizes the likelihood. If you are wandering why dont we just use that model, if it mazimizes the liklihood, the answer is that it usually does not follow the format we are looking for. It is not genirized (it suffers from overfitting) and will not allow us to make any acurate predictions or study relationships. In a way, it is just a random line that crosses all the data points and does not really show any patterns, cannot be described by an algorithm and may result in unessesary overcomplications. The oposite of the satureted model is the Null model, a model that uses only one parameter (for example the mean in the linear regression), we already used that as the lower bound. The model that we are trying to measure the performance of by comparing it to the null and saturated is called the Proposed model.
+
+The general form of R-squared can be discrebed by 1 - (a measure of bad fit - a measure of fit of our model/ (a measure of bad fit - a measure of perfect fit)), which will always result is 0 to 1, since NUll model is the minimum and Satureated the Maximum.
+'it just so happened' that up to now the measure of perfect fit was zero so it chould be ommitted.
+
+Residual and Null Devience
+When we get the summary statistics og a logistic regression model, R outputs someting called Residual and Null Devience.
+Those are nothing more that just more performance measurments for our model, which are derived by comparing how far our proposed model is from the Null (bad) model and how close it is to the Saturated (perfect) model. More specifically:
+ >Residuall Deviance = 2*(log of likelihood of Saturated - log of likelihood of proposed)
+ >Null deviance = 2*(log of likelihood of proposed - log of likelihood of null)
+Those two output a chi-squre value that can be used to calculate a p value which indicates thether our proposed model is significantly far from the null and suturated model. We want those outputs to be as small as possible. When we try and optimize our model by adding and removing predictors we should take note of the effect on those values!!
+
+P-values
+For p values we can simply use the Chi-square distribution (see chapter Chi-square test). The chi -square value equals 
+2(LL(fit)-LL(overall)) and the degrees of freedom are the difference in the parameters of LL(fit) and LL(overall). From those
+you can calculate the aeria under the graph which will give the propability of getting such values randomly, if there is no corelation between your predictors and reaction. 
+
+Demo in R
+We will use the Titanic data to see if we can use the given attributes as predictors that determine whether or not a passanger
+servived.
+
+[//]: TODO: Convert R block below to useful Rmd chunks
+
+
+```R
+install.packages("titanic")
+library(titanic)
+data("titanic_train")
+
+#set our data
+data <- titanic_train
+
+# replace missing values for Age with mean
+data$Age[is.na(Test$Age)] = mean(Test$Age, na.rm = TRUE)
+
+# Remove attributes that are not valuable
+#install.packages("dplyr")
+library(dplyr)
+data <- data %>% select(-c(Cabin, PassengerId, Ticket, Name))
+
+# use factors for the following attributes
+for (i in c("Survived","Pclass","Sex","Embarked")){
+    data[,i] = as.factor(data[,i])
+}
+
+# creates a genral linear model (fimily = binomial specifies logistic regression)
+gml.fit = glm(Survived~., data = data, family = binomial(link ='logit'))
+# we can see our estimated coefficients and associated p-values
+summary(gml.fit)
+
+
+# getting the R-squared
+install.packages("DescTools")
+library('DescTools')
+# you will notice this is relatively low, it not easy to predict the servivol of a passanger only given a few details about them
+# a lot of random factors are involved. There are also a lot of limitations in our model.
+PseudoR2(gml.fit)
+
+# We notice that this is a multivariate logistic regression, that takes the form of: lof(p(X)/(1-p(X)) = b0 + b1x1+ b2x2 + ... + bnxn
+
+################################################## SOME LIMITATIONS YOU SHOULD CONSIDER #############################################
+
+#### Confounding
+
+#### Multicolinearity
+
+#### Interaction terms
+
+#### Heteroscadasity (not relevant)
+
+
+
+
+
+
+
+
+############################################ EXAMPLE 2 ###########################################################
+
+# Let's use onether example. Predicting whether or not a patient is diabetic.
+# Our sample data set contains attributes such us BMI, age and measurments on glucose concentration, as well as a boolean that
+# indicates whether or not each paitient is diabetic. We hope to use those attributes as predictors for the patiants diabetic 
+# condiction. This time we will use onother technique for measuring how well our model preforms in giving acurate predictions.
+# It is a common technique used in various models and not just the logistic regression. Basicly we will split the data that we
+# have in two, the training data and the testig data. Our training data will be 80% of the total and it willl be used to estimate
+# the coefficients and draw the S-curve by assigning propabilities (in other words training our model). The test data will be then
+# fed to the trained model (without the attribute that gives out if a patiant is diabetic) and our model will give a prediction for
+# each of the row. That prediction will be according to a threshold we have assigned, for example we may choose that if the propability
+# of a patiant been diabetit is p >= 0.5 then we predict they are diabetic. Since we actually know if the patiants in the test data
+# are diabetic or not, we can compare the actual to the predicted outcomes and get a % accuracy. We will see how this is done
+# in details, as well as how we can optimize the chosen threshold for our specific problem.
+
+
+#we can use a csv that is avalable online for our data, we can load this in R using the following code
+data <- read.csv(file = "http://www2.compute.dtu.dk/courses/02819/pima.csv", head = TRUE, sep = ",")
+############## SPLITING THE DATA#################################################################################################
+
+# first we need to split our data, we do this with the use of caTools library (there are other ways too) ##
+# the following creates an array of TRUE/FALSE values for every row in our data set,
+# where TRUE is 80% of the data. It does this 'randomly', later on we will see techniques for spreading the success and failure
+# rates proportionally across training and testing data
+install.packages("caTools")
+library(caTools)
+split <- sample.split(data, SplitRatio =  0.8)
+split
+
+#we then split the data using that array, where TRUE is for the training and FALSE is for the testing
+trainingData <- subset(data, split == TRUE)
+testingData <- subset(data, split == FALSE)
+
+#create the model using the TRAINING data
+model <- glm(type ~., trainingData, family = binomial(link = 'logit'))
+# review our model
+summary(model)
+#as expected BMI ang glu are significant (you can try and remove the predictors with a larger p-value but do this intrementally and note 
+#the effect it has on the null and deviance residuals (see above) )
+
+########lets visulize
+#we will use only glu to plot our grapths easier
+gml.fitGlu = glm(type ~ glu, data = trainingData, family = binomial(link ='logit'))
+summary(gml.fitGlu) 
+#first we will plot the best fiting line of propability of survivol over age 
+#we need to get the propabilities for each row 
+p <- predict(gml.fitGlu, trainingData, type = "response")
+# get the lof of the odds, which is our y
+y <- log(p/(1 - p))
+# substitude with our calculated coefficients for the x axis
+x <- -5.940285 + 0.042616  * trainingData$glu 
+plot(x, y)
+#Now let's transform it to the S-shaped curve with y from 0 to 1
+#this is just the logistic function where i have substituted the coefficient for the intercept for our x with the ones
+#calculates from our model summary
+f <- function(x) {
+  1/(1 + exp( -5.940285  + (0.042616  * x )))}
+x <- trainingData$glu
+#this scales the grapth
+x <- -500 : 700
+plot(x, f(x), type = "l")
+#################
+
+########################### CONFUSION MATRIX####################################################################################
+# The predict() function allows us to feed new data in the trained model and receive a propability of each patiant on that data,
+# been diabetic, we will use this on our testing data.
+# We can view the propabilities asscociated with each row using the following code, where response gives propability
+res <- predict(model, testingData, type = "response")
+res
+
+# The confusion matrix will then compare the predicted to the actuall values, given a threshold (p>0.55 in this case)
+# It shows how many of the patiants that where actually diabetic, were also predicted as diabetic
+# and the other way around
+
+#we will use the Caret library for that
+install.packages("caret")
+library(caret)
+#this makes the table of predicted TRUE to actuall TRUE and predicted FALSE to actuall FALSE, assuming a p >= 0.55 threshold
+table <- table(ActualValue = testingData$type, PredictedValue = res > 0.55)
+table
+# predicted true that are actally true are refered to as True Positive TP
+# predicted true that are actually false are refered to as False Positive FP
+# predicted false that are actually false are refered to as False Negative FN
+# predicted false that are actually true are refered to as True Negative TN
+
+#this creates the confusion Matrix that gives us the 
+cm <- confusionMatrix(table)
+########################################################################################################################
+
+##################################### OPTIMIZING THE THRESHOLD #########################################################
+#Choosing a better threshold
+install.packages("ROCR")
+library(ROCR)
+
+resForTraining <-predict(model, trainingData, type = "response")
+#choosing a value
+ROCRPred = prediction(resForTraining,trainingData$type)
+#measuring performance true and false predicted rate (0,1)
+ROCRPref <-performance(ROCRPred, "tpr", "fpr")
+plot(ROCRPref, colorize = TRUE)
+```
