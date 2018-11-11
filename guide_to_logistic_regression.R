@@ -246,20 +246,35 @@ accuracy <- cm$overall['Accuracy'][[1]][1]
 Kappa <- (accuracy - P_of_chance)/(1-P_of_chance)
 #we can see this is the same value given by R in the confusion matrix
 Kappa
-
-
 ########################################################################################################################
 
 ##################################### OPTIMIZING THE THRESHOLD #########################################################
-#Choosing a better threshold
+# changing the threashold will affect our models sensitivity and specificity. 
+# If we had a very low therehold where p is close to 0, then almost always we whould predict that a pacient was diabetic. 
+# This means that we whould predict correctly TRUE when TRUE, but also TRUE when FALSE, in other words we whould have 
+# a very high true possitive rate.
+# If we had a very high threshold, close to p=1, then almost always we whould predict that a patiant is not diabetic.
+# This means we whould predict FALSE when FALSE, but also FALSE when TRUE,
+# in other words we whould have a very high false positive rate.
+
+# usually we want to balance this and we wnd up somewhere in the midle. However, we need to apply domain knowledge and think about
+# thether we care more about true positive rate or false positive rate. For example what is the effects of:
+# predicting that a patiant is diabetic when they aren't (having more FP), refered to as type I errors
+# versus
+# predicting that a patient is not diabetic when they are (having more TN), refered to as type II errors
+# Usually in such cases we whould be more concered for the type 2 errors, since failing to diagnose a diabities can have a greater 
+# inpact on the patients health, so we might choose a p somewhere lower that 0.5 mayby 0.4
+
+# We can visualize how changing our threshold affects the true and false positive rate to help us choose
+# the right p
 install.packages("ROCR")
 library(ROCR)
 
-resForTraining <-predict(model, trainingData, type = "response")
+resForTraining <- predict(model, trainingData, type = "response")
 #choosing a value
 ROCRPred = prediction(resForTraining,trainingData$type)
-#measuring performance true and false predicted rate (0,1)
-ROCRPref <-performance(ROCRPred, "tpr", "fpr")
+ROCRPref <- performance(ROCRPred, "tpr", "fpr")
+# we want something on the green region between 0.4 and 0.6, but closer to 0.4 to ensure less type 2 errors
 plot(ROCRPref, colorize = TRUE)
 
 
