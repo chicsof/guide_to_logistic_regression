@@ -360,6 +360,12 @@ accuracy <- cm$overall['Accuracy'][[1]][1]
 Kappa <- (accuracy - P_of_chance)/(1-P_of_chance)
 #we can see this is the same value given by R in the confusion matrix
 Kappa
+#So how do we interpret Kappa, this is a bit vague and there is no clear unswer but we can see some examples
+# 1 means our model is prefect
+# 0 means it as good as chance
+# any negative value means it does worse than chance
+# anything close to 0.3 and above is relativly good
+# values of .8 and above are extremely rare
 ########################################################################################################################
 
 ##################################### OPTIMIZING THE THRESHOLD #########################################################
